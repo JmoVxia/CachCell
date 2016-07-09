@@ -20,29 +20,28 @@ static NSString * const CLDefaultText = @"清除缓存";
 
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 {
-    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
-        
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier])
+    {
         self.textLabel.text = CLDefaultText;
         
         // 禁止点击事件
         self.userInteractionEnabled = NO;
-        
         // 右边显示圈圈
         UIActivityIndicatorView *loadingView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
         [loadingView startAnimating];
         self.accessoryView = loadingView;
-        
-        // 计算大小
-        [[[NSOperationQueue alloc] init] addOperationWithBlock:^{
+        //弱引用是为了让Cell销毁，不会被Block拉住
+        __weak __typeof(self) weakSelf = self;
+        //子线程
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
             // 计算缓存大小
             NSInteger size = CLCacheFile.fileSize;
             //加上SDWebImage的缓存
             size += [SDImageCache sharedImageCache].getSize;
-            
+            //Cell销毁后就不执行下面操作
+            if (weakSelf == nil) return;
             //缓存路径
-            NSLog(@"%@",CLCacheFile);
-            
-
+            //            NSLog(@"%@",CLCacheFile);
             NSString *sizeText = nil;
             if (size >= pow(10, 9)) { // >= 1GB
                 sizeText = [NSString stringWithFormat:@"%.2fGB", size / pow(10, 9)];
@@ -54,32 +53,27 @@ static NSString * const CLDefaultText = @"清除缓存";
                 sizeText = [NSString stringWithFormat:@"%zdB", size];
             }
             NSString *text = [NSString stringWithFormat:@"%@(%@)", CLDefaultText, sizeText];
-            
-            // 回到主线程
-            [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-                self.textLabel.text = text;
-                self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-                self.accessoryView = nil;
+            //回到主线程刷新UI
+            dispatch_async(dispatch_get_main_queue(), ^{
+                weakSelf.textLabel.text = text;
+                weakSelf.accessoryType  = UITableViewCellAccessoryDisclosureIndicator;
+                weakSelf.accessoryView  = nil;
                 // 允许点击事件
-                self.userInteractionEnabled = YES;
-                
-                
-            }];
-        }];
+                weakSelf.userInteractionEnabled = YES;
+            });
+        });
     }
     return self;
 }
 
+
 - (void)updateStatus
 {
     if (self.accessoryView == nil) return;
-    
     // 让圈圈继续旋转
     UIActivityIndicatorView *loadingView = (UIActivityIndicatorView *)self.accessoryView;
     [loadingView startAnimating];
-    
     self.textLabel.text = @"正在计算缓存大小...";
-
 }
 //清理缓存
 - (void)clearCache
@@ -87,30 +81,23 @@ static NSString * const CLDefaultText = @"清除缓存";
     [SVProgressHUD showWithStatus:@"正在清除缓存"];
     [SVProgressHUD setDefaultMaskType:SVProgressHUDMaskTypeBlack];
     [[SDImageCache sharedImageCache] clearDiskOnCompletion:^{
-        
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        //删除
-        [[NSFileManager defaultManager] removeItemAtPath:CLCacheFile error:nil];
-        //创建文件夹
-        [[NSFileManager defaultManager] createDirectoryAtPath:CLCacheFile withIntermediateDirectories:YES attributes:nil error:nil];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [SVProgressHUD showSuccessWithStatus:@"清除成功"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [SVProgressHUD dismiss];
+        //子线程
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            //删除
+            [[NSFileManager defaultManager] removeItemAtPath:CLCacheFile error:nil];
+            //创建文件夹
+            [[NSFileManager defaultManager] createDirectoryAtPath:CLCacheFile withIntermediateDirectories:YES attributes:nil error:nil];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [SVProgressHUD showSuccessWithStatus:@"清除成功"];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [SVProgressHUD dismiss];
+                });
+                    self.textLabel.text = @"清除缓存(0B)";
+                    // 禁止点击事件
+                    self.userInteractionEnabled = NO;
+                });
         });
-        self.textLabel.text = @"清除缓存(0B)";
-        // 禁止点击事件
-        self.userInteractionEnabled = NO;
-        });
-    
-    });
-        
-}];
+    }];
 }
-
-
-
-
-
 
 @end

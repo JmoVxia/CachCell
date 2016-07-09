@@ -72,7 +72,10 @@
         CLCacheCell *cell = (CLCacheCell *)[tableView cellForRowAtIndexPath:indexPath];
         [cell clearCache];
     }
-    
+    else
+    {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
     
 }
 
