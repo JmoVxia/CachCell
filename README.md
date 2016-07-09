@@ -15,4 +15,4 @@
 这是单独做的一个Cell，复用的时候需要单独的标识符，不能当做常规Cell处理
 
 
-![image](http://ww3.sinaimg.cn/large/006aAFlvjw1f5nmjyv6dcg30b80kwq5b.gif)
+![image](http://ww3.sinaimg.cn/large/006aAFlvgw1f5nmwwdyiog30b80kwq5b.gif)
