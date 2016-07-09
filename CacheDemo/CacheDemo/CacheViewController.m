@@ -44,14 +44,11 @@
     if (indexPath.row==0)
     {
         CLCacheCell *canchecell = [tableView dequeueReusableCellWithIdentifier:@"CLCacheCell"];
-        //更新状态
-        [canchecell updateStatus];
         return canchecell;
     }
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"UITableViewCell"];
     cell.textLabel.text = [NSString stringWithFormat:@"%ld",indexPath.row];
-    [cell.imageView sd_setImageWithURL:[NSURL URLWithString:@"http://wimg.spriteapp.cn/ugc/2016/07/07/577e092794066_a_1.jpg"]];
     return cell;
     
 }

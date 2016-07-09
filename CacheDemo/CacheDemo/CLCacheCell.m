@@ -66,15 +66,6 @@ static NSString * const CLDefaultText = @"清除缓存";
     return self;
 }
 
-
-- (void)updateStatus
-{
-    if (self.accessoryView == nil) return;
-    // 让圈圈继续旋转
-    UIActivityIndicatorView *loadingView = (UIActivityIndicatorView *)self.accessoryView;
-    [loadingView startAnimating];
-    self.textLabel.text = @"正在计算缓存大小...";
-}
 //清理缓存
 - (void)clearCache
 {
@@ -98,6 +89,17 @@ static NSString * const CLDefaultText = @"清除缓存";
                 });
         });
     }];
+}
+
+//当Cell重写显示的时候，调用下面方法
+-(void)layoutSubviews
+{
+    [super layoutSubviews];
+    if (self.accessoryView == nil) return;
+    // 让圈圈继续旋转
+    UIActivityIndicatorView *loadingView = (UIActivityIndicatorView *)self.accessoryView;
+    [loadingView startAnimating];
+    self.textLabel.text = @"正在计算缓存大小...";
 }
 
 @end

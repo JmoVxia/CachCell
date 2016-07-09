@@ -13,9 +13,5 @@
  *  清除缓存
  */
 - (void)clearCache;
-/**
- *  更新状态
- */
-- (void)updateStatus;
 
 @end
