@@ -8,7 +8,7 @@
 
 #import "CacheViewController.h"
 #import "CLCacheCell.h"
-
+#import "UIImageView+WebCache.h"
 @interface CacheViewController ()<UITableViewDelegate,UITableViewDataSource>
 
 @property (nonatomic,strong) UITableView *tableView;
@@ -25,6 +25,7 @@
     _tableView.contentInset = UIEdgeInsetsMake(50, 0, 0, 0);
     _tableView.delegate = self;
     _tableView.dataSource = self;
+    _tableView.separatorStyle = UIAccessibilityTraitNone;
     [self.view addSubview:_tableView];
     
     [_tableView registerClass:[CLCacheCell class] forCellReuseIdentifier:@"CLCacheCell"];
@@ -50,8 +51,14 @@
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"UITableViewCell"];
     cell.textLabel.text = [NSString stringWithFormat:@"%ld",indexPath.row];
+    [cell.imageView sd_setImageWithURL:[NSURL URLWithString:@"http://wimg.spriteapp.cn/ugc/2016/07/07/577e092794066_a_1.jpg"]];
     return cell;
     
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 80;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath

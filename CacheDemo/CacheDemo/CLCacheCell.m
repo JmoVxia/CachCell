@@ -9,7 +9,7 @@
 #import "CLCacheCell.h"
 #import "NSString+Extension.h"
 #import "SVProgressHUD.h"
-
+#import "SDImageCache.h"
 @implementation CLCacheCell
 
 /** 缓存路径 */
@@ -36,9 +36,12 @@ static NSString * const CLDefaultText = @"清除缓存";
         [[[NSOperationQueue alloc] init] addOperationWithBlock:^{
             // 计算缓存大小
             NSInteger size = CLCacheFile.fileSize;
+            //加上SDWebImage的缓存
+            size += [SDImageCache sharedImageCache].getSize;
+            
             //缓存路径
             NSLog(@"%@",CLCacheFile);
-
+            
 
             NSString *sizeText = nil;
             if (size >= pow(10, 9)) { // >= 1GB
@@ -83,24 +86,31 @@ static NSString * const CLDefaultText = @"清除缓存";
 {
     [SVProgressHUD showWithStatus:@"正在清除缓存"];
     [SVProgressHUD setDefaultMaskType:SVProgressHUDMaskTypeBlack];
-    
-    [[[NSOperationQueue alloc] init] addOperationWithBlock:^{
-        [[NSFileManager defaultManager] removeItemAtPath:CLCacheFile error:nil];
+    [[SDImageCache sharedImageCache] clearDiskOnCompletion:^{
         
-        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-            [SVProgressHUD showSuccessWithStatus:@"清除成功"];
-            
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [SVProgressHUD dismiss];
-            });
-            
-            self.textLabel.text = CLDefaultText;
-            
-            // 禁止点击事件
-            self.userInteractionEnabled = NO;
-        }];
-    }];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        //删除
+        [[NSFileManager defaultManager] removeItemAtPath:CLCacheFile error:nil];
+        //创建文件夹
+        [[NSFileManager defaultManager] createDirectoryAtPath:CLCacheFile withIntermediateDirectories:YES attributes:nil error:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [SVProgressHUD showSuccessWithStatus:@"清除成功"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [SVProgressHUD dismiss];
+        });
+        self.textLabel.text = @"清除缓存(0B)";
+        // 禁止点击事件
+        self.userInteractionEnabled = NO;
+        });
+    
+    });
+        
+}];
 }
+
+
+
+
 
 
 @end
