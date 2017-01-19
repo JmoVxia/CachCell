@@ -34,14 +34,15 @@ static NSString * const CLDefaultText = @"清除缓存";
         __weak __typeof(self) weakSelf = self;
         //子线程
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            __typeof(&*weakSelf) strongSelf = weakSelf;
             // 计算缓存大小
             NSInteger size = CLCacheFile.fileSize;
             //加上SDWebImage的缓存
             size += [SDImageCache sharedImageCache].getSize;
             //Cell销毁后就不执行下面操作
-            if (weakSelf == nil) return;
+            if (strongSelf == nil) return;
             //缓存路径
-            //            NSLog(@"%@",CLCacheFile);
+            NSLog(@"%@",CLCacheFile);
             NSString *sizeText = nil;
             if (size >= pow(10, 9)) { // >= 1GB
                 sizeText = [NSString stringWithFormat:@"%.2fGB", size / pow(10, 9)];
@@ -55,11 +56,11 @@ static NSString * const CLDefaultText = @"清除缓存";
             NSString *text = [NSString stringWithFormat:@"%@(%@)", CLDefaultText, sizeText];
             //回到主线程刷新UI
             dispatch_async(dispatch_get_main_queue(), ^{
-                weakSelf.textLabel.text = text;
-                weakSelf.accessoryType  = UITableViewCellAccessoryDisclosureIndicator;
-                weakSelf.accessoryView  = nil;
+                strongSelf.textLabel.text = text;
+                strongSelf.accessoryType  = UITableViewCellAccessoryDisclosureIndicator;
+                strongSelf.accessoryView  = nil;
                 // 允许点击事件
-                weakSelf.userInteractionEnabled = YES;
+                strongSelf.userInteractionEnabled = YES;
             });
         });
     }
